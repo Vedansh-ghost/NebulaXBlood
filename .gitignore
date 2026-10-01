@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+nebula.db
+*.db
+.env
+.env.*
+!.env.example
+node_modules/
+.DS_Store

@@ -1,0 +1,3 @@
+const API=localStorage.getItem('nebula_api')||'http://127.0.0.1:8000';
+async function get(p){const r=await fetch(API+p); if(!r.ok) throw Error(await r.text()); return r.json()}
+(async()=>{try{document.querySelector('#health').textContent=(await get('/api/health')).ok?'ONLINE':'OFFLINE';document.querySelector('#plans').innerHTML=(await get('/api/plans')).map(p=>`<p><b>${p.name}</b> · ${p.kind} · ₹${(p.price_minor/100).toFixed(2)}</p>`).join('')||'No plans yet';document.querySelector('#servers').innerHTML=(await get('/api/servers')).map(s=>`<p><b>${s.name}</b> · ${s.kind} · ${s.status}</p>`).join('')||'No servers yet'}catch(e){document.querySelector('#health').textContent='OFFLINE — '+e.message}})();
