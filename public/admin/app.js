@@ -4,7 +4,3 @@ function saveToken(){localStorage.setItem('nebula_admin_token',adminToken.value)
 async function get(p){const r=await fetch(API+p,{headers:HEADERS()});return r.json()}
 async function createPlan(){const b={name:name.value,kind:kind.value,ram_mb:+ram.value||1024,cpu_percent:+cpu.value||100,disk_mb:+disk.value||10240,price_minor:(+price.value||0)*100};const r=await fetch(API+'/api/plans',{method:'POST',headers:HEADERS(),body:JSON.stringify(b)});alert(r.ok?'Plan created':'Failed: '+await r.text());location.reload()}
 (async()=>{try{nodes.innerHTML=(await get('/api/nodes')).map(n=>`<p>${n.name} · ${n.kind} · ${n.status}</p>`).join('')||'No nodes yet'}catch(e){nodes.textContent='API offline'}})();
-
-async function saveQR(){const v=qrUrl.value.trim(); if(!v)return alert('Enter a QR image URL or data URL'); const r=await fetch(API+'/api/payment/qr',{method:'PUT',headers:HEADERS(),body:JSON.stringify(v)}); qrStatus.textContent=r.ok?'QR updated':'Failed: '+await r.text();}
-async function setMaintenance(){const id=+maintNode.value;const q=new URLSearchParams({message:maintMsg.value||'Scheduled maintenance'});if(maintUntil.value)q.set('until',maintUntil.value);const r=await fetch(API+'/api/nodes/'+id+'/maintenance?'+q,{method:'POST',headers:HEADERS()});alert(r.ok?'Node placed in maintenance':'Failed: '+await r.text());location.reload()}
-async function clearMaintenance(){const id=+maintNode.value;const r=await fetch(API+'/api/nodes/'+id+'/maintenance',{method:'DELETE',headers:HEADERS()});alert(r.ok?'Maintenance cleared':'Failed: '+await r.text());location.reload()}

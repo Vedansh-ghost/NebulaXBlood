@@ -1,0 +1,7 @@
+{$NEBULA_DOMAIN} {
+    encode gzip zstd
+    root * /srv/public
+    @api path /api/*
+    reverse_proxy @api core:8000
+    file_server
+}

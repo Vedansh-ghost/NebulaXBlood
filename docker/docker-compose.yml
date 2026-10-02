@@ -1,15 +1,57 @@
 services:
   core:
     build: ../nebula-core
-    working_dir: /app
+    restart: unless-stopped
+    env_file: ../.env
     command: uvicorn main:app --host 0.0.0.0 --port 8000
-    ports: ["8000:8000"]
-    volumes: ["../nebula-core:/app"]
+    expose: ["8000"]
+    volumes: ["../data:/app/data"]
+    depends_on:
+      postgres:
+        condition: service_healthy
   agent:
-    image: python:3.12-slim
-    working_dir: /app
-    command: python agent.py
+    build: ../nebula-agent
+    restart: unless-stopped
+    env_file: ../.env
     environment:
       NEBULA_CORE: http://core:8000
-    volumes: ["../nebula-agent:/app"]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on: [core]
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server","--appendonly","yes"]
+    volumes: ["redis_data:/data"]
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      NEBULA_DOMAIN: ${NEBULA_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../Caddyfile:/etc/caddy/Caddyfile:ro
+      - ..:/srv:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [core]
+volumes:
+  postgres_data:
+  redis_data:
+  caddy_data:
+  caddy_config:
